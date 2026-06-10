@@ -1,84 +1,77 @@
+
 #!/usr/bin/env python3
   """
   Gmail Priority Tagger Agent
-  ============================
-  Scans the Gmail inbox for the past 24 hours and applies the "Priority"
-  label (Label_26) to emails that are important.
-  
+  ============================                                                                                                                                                    
+  Scans all unread inbox emails and sorts them into two labels:
+    - Priority (Label_26): emails from real people or requiring action
+    - Non-Priority (Label_27): everything else — archived out of inbox
+
   Run by a Claude Code cloud agent using Gmail MCP tools.
   Owner: bweissman214@gmail.com
   """
 
   # ── Configuration ────────────────────────────────────────────────────────────
-  
-  LABEL_ID    = "Label_26"   # Gmail label ID for "Priority"
-  LABEL_NAME  = "Priority"
-  SEARCH_QUERY = "in:inbox newer_than:1d"
-  PAGE_SIZE   = 50
+                                                                                                                                                                                  
+  PRIORITY_LABEL_ID     = "Label_26"   # "Priority"
+  NON_PRIORITY_LABEL_ID = "Label_27"   # "Non-Priority"
+  SEARCH_QUERY          = "in:inbox is:unread"
+  PAGE_SIZE             = 50
 
   # ── Importance criteria ───────────────────────────────────────────────────────
   #
-  # Label a thread IMPORTANT if ANY of the following are true:
+  # Label PRIORITY if ANY of the following are true:
   #
   #   1. REAL PERSON sender
-  #      - Email address contains a real first/last name (e.g. john.smith@company.com,
-  #        isaac@amtecadvisory.com, suzanne.george@73strings.com)
+  #      - Real first/last name in address (e.g. isaac@amtecadvisory.com)
   #      - Exclude: no-reply@, noreply@, newsletter@, notifications@, alerts@,
   #        donotreply@, info@, support@, hello@, team@, news@, marketing@,
-  #        updates@, contact@, postmaster@, and obvious bulk-mail domains
+  #        updates@, contact@, postmaster@, or obvious bulk-mail domains
   #
   #   2. FINANCIAL ALERT requiring action
-  #      - Bank balance at/below zero or insufficient funds (Wells Fargo, Chase, etc.)
-  #      - Payment overdue / fraud alert / card action required
+  #      - Balance at/below zero, insufficient funds, payment overdue, fraud alert
   #
-  #   3. MEETING INVITATION from a real individual
-  #      - Calendar invite sent by a named person (not a mailing list)
+  #   3. MEETING INVITATION from a real individual (not a mailing list)
   #
-  #   4. JOB APPLICATION RESPONSE
-  #      - From a named recruiter or HR person, not an automated ATS system
+  #   4. JOB APPLICATION RESPONSE from a named recruiter or HR person
   #
   #   5. ACCOUNT ACTION REQUIRED
   #      - A real company asking you to confirm/verify something important
   #        (e.g. AmEx income confirmation, bank security alert)
   #
-  # Do NOT label:
-  #   - Newsletters (Morning Brew, The Atlantic, Substack, etc.)
+  # Label NON-PRIORITY (everything else) and ARCHIVE (remove INBOX label):
+  #   - Newsletters, digests, Substack, Morning Brew, etc.
   #   - Marketing / promotional emails
-  #   - Automated receipts, shipping updates, membership confirmations
-  #   - Social media digests (Instagram, LinkedIn)
+  #   - Automated receipts, shipping updates, confirmations
+  #   - Social media digests
   #   - Job board automated alerts
-  #   - App update / product announcement emails
+  #   - App updates / product announcements
   #   - Religious content / Torah learning notifications
   #   - Event invitations from organizations / mailing lists
-  
+
   # ── Agent instructions ────────────────────────────────────────────────────────
   #
-  # The Claude Code agent executing this file should:
-  #
-  #   Step 1 — Search inbox
-  #       Call search_threads(query=SEARCH_QUERY, pageSize=PAGE_SIZE)
-  #       If nextPageToken is present, paginate until all threads are fetched.
+  #   Step 1 — Search inbox                                                                                                                                                       
+  #       Call search_threads(query="in:inbox is:unread", pageSize=50)
+  #       Paginate through ALL pages using nextPageToken until done.
   #
   #   Step 2 — Classify each thread
-  #       For each thread, evaluate sender address and subject line against
-  #       the criteria above. When in doubt, do NOT label.
+  #       Evaluate sender and subject against the criteria above.                                                                                                                 
+  #       Every thread gets exactly ONE label.
   #
-  #   Step 3 — Apply label
-  #       For each IMPORTANT thread, call:
-  #           label_thread(threadId=<id>, labelIds=[LABEL_ID])
+  #   Step 3 — Apply labels
+  #       PRIORITY:     label_thread(threadId, labelIds=["Label_26"])
+  #       NON-PRIORITY: label_thread(threadId, labelIds=["Label_27"])
+  #                     unlabel_thread(threadId, labelIds=["INBOX"])  ← archives it
   #
   #   Step 4 — Print summary
-  #       Output:
-  #           - Total threads scanned
-  #           - Number labeled Priority
-  #           - List of labeled threads: sender | subject
+  #       - Total threads scanned
+  #       - Priority count + list (sender | subject)                                                                                                                              
+  #       - Non-Priority count (archived out of inbox)
 
   def run():
       """Entry point — executed by the Claude Code agent using Gmail MCP tools."""
       pass
-  
+
   if __name__ == "__main__":
-      run()
-
-  5. Click Commit changes
-
+      run()                        
